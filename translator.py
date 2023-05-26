@@ -25,6 +25,7 @@ class Translator:
                 if file.endswith('.srt') or file.endswith('.ass') or file.endswith('.ssa'):
                     file_path = os.path.join(root, file)
                     file_list.append(file_path)
+        file_list.sort()
         return file_list
     
     def translate_sub(self, file_name, target_name, service='google', from_lang="en", to_lang="zh"):
