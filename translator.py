@@ -1,6 +1,7 @@
 from pysubparser import parser, writer
 from pysubparser.classes.subtitle import Subtitle
 from googletranslatepy import Translator as GTranslator
+from google.cloud import translate_v2 as gtranslate
 import os
 from time import sleep
 
@@ -9,12 +10,13 @@ class Translator:
     def __init__(self):
         self.parser = parser.parse
         self.writer = writer.write
-        self.translator = GTranslator()
+        self.translator = gtranslate.Client()
 
     def translate(self, text, service='google', from_lang="en", to_lang="zh"):
         # _ = ts.preaccelerate_and_speedtest()
         try:
-            return self.translator.translate(text, timeout=10)
+            result = self.translator.translate(text, target_language='zh')
+            return result["translatedText"]
         except:
             return ''
     
@@ -40,7 +42,7 @@ class Translator:
             _subtitle = Subtitle(index=index, start=s.start, end=s.end, lines=[f'{translated}\n{s.text}'])
             resutl.append(_subtitle)
             index += 1
-            sleep(0.2)
+            sleep(0.1)
             print(index)
         self.writer(resutl, target_name)
 
