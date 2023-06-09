@@ -1,6 +1,7 @@
 from pysubparser import parser, writer
 from pysubparser.classes.subtitle import Subtitle
-import translators as ts
+from googletranslatepy import Translator as GTranslator
+from google.cloud import translate_v2 as gtranslate
 import os
 from time import sleep
 
@@ -9,11 +10,15 @@ class Translator:
     def __init__(self):
         self.parser = parser.parse
         self.writer = writer.write
-        self.translator = ts
+        self.translator = gtranslate.Client()
 
     def translate(self, text, service='google', from_lang="en", to_lang="zh"):
         # _ = ts.preaccelerate_and_speedtest()
-        return ts.translate_text(text, translator=service)
+        try:
+            result = self.translator.translate(text, target_language='zh')
+            return result["translatedText"]
+        except:
+            return ''
     
     def subtitle(self, file_name):
         return self.parser(file_name)
@@ -37,6 +42,8 @@ class Translator:
             _subtitle = Subtitle(index=index, start=s.start, end=s.end, lines=[f'{translated}\n{s.text}'])
             resutl.append(_subtitle)
             index += 1
+            sleep(0.1)
+            print(index)
         self.writer(resutl, target_name)
 
     def translate_path(self, path, target_path, service='google', from_lang="en", to_lang="zh"):
@@ -44,12 +51,12 @@ class Translator:
         if not os.path.exists(target_path):  # 判断目录是否存在
             os.makedirs(target_path)
         for f in sub_files:
+            print(f'start translate: {f}')
             self.translate_sub(
                 f,
                 target_name=os.path.join(target_path, os.path.split(f)[-1]),
                 service=service
             )
-            sleep(0.5)
             print(f, 1111)
 
 
