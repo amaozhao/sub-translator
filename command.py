@@ -6,8 +6,19 @@ app = typer.Typer()
 
 
 @app.command()
+def reset_path(path: str):
+    translator.reset_path(path, target_path="reset")
+
+
+@app.command()
 def translate_path(path: str):
     translator.translate_path(path, target_path="subtitle", service='baidu', to_lang="zh")
+
+
+@app.command()
+def translate_with_reset(path: str):
+    translator.reset_path(path, target_path="reset")
+    translator.translate_path(path='reset', target_path="subtitle", service='baidu', to_lang="zh")
 
 
 @app.command()
