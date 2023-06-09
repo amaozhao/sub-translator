@@ -16,6 +16,17 @@ def translate_path(path: str):
 
 
 @app.command()
+def convert_path(path: str):
+    translator.convert_path(path, target_path="convert")
+
+
+@app.command()
+def convert_path_with_reset(path: str):
+    translator.convert_path(path, target_path="convert")
+    translator.reset_path(path="convert", target_path="reset")
+
+
+@app.command()
 def translate_with_reset(path: str):
     translator.reset_path(path, target_path="reset")
     translator.translate_path(path='reset', target_path="subtitle", service='baidu', to_lang="zh")

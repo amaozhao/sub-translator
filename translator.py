@@ -3,13 +3,14 @@ from pysubparser.classes.subtitle import Subtitle
 from google.cloud import translate_v2 as gtranslate
 import os
 from time import sleep
+import webvtt
 
 
 class Translator:
     def __init__(self):
         self.parser = parser.parse
         self.writer = writer.write
-        self.translator = gtranslate.Client()
+        # self.translator = gtranslate.Client()
 
     def translate(self, text, from_lang="en", to_lang="zh"):
         # _ = ts.preaccelerate_and_speedtest()
@@ -62,6 +63,7 @@ class Translator:
         result = []
         sub_map = {}
         jumps = set()
+        st_idx = 1
         for s in subtitles:
             sub_map[s.index] = s
         for k, s in sub_map.items():
@@ -69,14 +71,17 @@ class Translator:
                 continue
             jumps.add(s.index)
             text = s.text.strip()
+            start = s.start
+            end = s.end
             if not s.text.endswith('.') or not s.text.endswith(','):
                 next_sub = sub_map.get(s.index + 1)
                 if next_sub:
-                    next_end = next_sub.end
+                    end = next_sub.end
                     next_text = next_sub.text.strip()
                     jumps.add(next_sub.index)
                     text = text + ' ' + next_text
-            _sub = Subtitle(index=s.index, start=s.start, end=s.end, lines=[text])
+            _sub = Subtitle(index=st_idx, start=start, end=end, lines=[text])
+            st_idx += 1
             result.append(_sub)
         return result
     
@@ -91,6 +96,26 @@ class Translator:
                 subtitle,
                 os.path.join(target_path, os.path.split(f)[-1])
             )
+
+    def convert_path(self, path, target_path):
+        file_list = []
+        for root, dirs, files in os.walk(path):
+            for file in files:
+                if file.endswith('.vtt'):
+                    file_path = os.path.join(root, file)
+                    file_list.append(file_path)
+        file_list.sort()
+        if not os.path.exists(target_path):  # 判断目录是否存在
+            os.makedirs(target_path)
+        for f in file_list:
+            vtt = webvtt.read(f)
+            vtt.save_as_srt()
+
+            # write to opened file in SRT format
+            f_name = os.path.split(f)[-1]
+            f_name = f_name[:-4] + '.srt'
+            with open(os.path.join(target_path, f_name), 'w') as fd:
+                vtt.write(fd, format='srt')
 
 
 
