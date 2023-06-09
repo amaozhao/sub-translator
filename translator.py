@@ -9,7 +9,7 @@ class Translator:
     def __init__(self):
         self.parser = parser.parse
         self.writer = writer.write
-        # self.translator = gtranslate.Client()
+        self.translator = gtranslate.Client()
 
     def translate(self, text, from_lang="en", to_lang="zh"):
         # _ = ts.preaccelerate_and_speedtest()
