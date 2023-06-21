@@ -1,6 +1,7 @@
 from pysubparser import parser, writer
 from pysubparser.classes.subtitle import Subtitle
 from google.cloud import translate_v2 as gtranslate
+from deep_translator import GoogleTranslator
 import os
 from time import sleep
 import webvtt
@@ -10,15 +11,18 @@ class Translator:
     def __init__(self):
         self.parser = parser.parse
         self.writer = writer.write
-        self.translator = gtranslate.Client()
+        # self.translator = gtranslate.Client()
+        self.translator = GoogleTranslator(source='en', target='zh-CN')
 
     def translate(self, text, from_lang="en", to_lang="zh"):
         # _ = ts.preaccelerate_and_speedtest()
         try:
-            result = self.translator.translate(text, target_language=to_lang)
-            return result["translatedText"]
+            # result = self.translator.translate(text, target_language=to_lang)
+            # return result["translatedText"]
+            result = self.translator.translate(text)
+            return result
         except:
-            return ''
+            return '--ERROR--'
     
     def subtitle(self, file_name):
         return self.parser(file_name)
@@ -38,11 +42,14 @@ class Translator:
         result = []
         index = 1
         for s in subtitle:
-            translated = self.translate(s.text, from_lang=from_lang, to_lang=to_lang)
-            _subtitle = Subtitle(index=index, start=s.start, end=s.end, lines=[f'{translated}\n{s.text}'])
+            text = s.text
+            if '\n' in text:
+                text = text.replace('\n', ' ')
+            translated = self.translate(text, from_lang=from_lang, to_lang=to_lang)
+            _subtitle = Subtitle(index=index, start=s.start, end=s.end, lines=[f'{translated}\n{text}'])
             result.append(_subtitle)
             index += 1
-            sleep(0.1)
+            sleep(0.15)
             print(index)
         self.writer(result, target_name)
 
@@ -50,12 +57,14 @@ class Translator:
         sub_files = self.path_subs(path)
         if not os.path.exists(target_path):  # 判断目录是否存在
             os.makedirs(target_path)
+        path_last = path.split()[-1]
         for f in sub_files:
             print(f'start translate: {f}')
-            self.translate_sub(
-                f,
-                target_name=os.path.join(target_path, os.path.split(f)[-1])
-            )
+            file_path = os.path.join(target_path, f.split(path_last)[-1][1:])
+            _path, file = os.path.split(file_path)
+            if not os.path.exists(_path):  # 判断目录是否存在
+                os.makedirs(_path)
+            self.translate_sub(f, file_path)
             print(f, 1111)
 
     def reset_sub(self, file_name):
@@ -70,7 +79,7 @@ class Translator:
             if s.index in jumps:
                 continue
             jumps.add(s.index)
-            text = s.text.strip()
+            text = s.text.replace('\n', ' ').strip()
             start = s.start
             end = s.end
             if not s.text.endswith('.') or not s.text.endswith(','):
@@ -87,15 +96,17 @@ class Translator:
     
     def reset_path(self, path, target_path):
         sub_files = self.path_subs(path)
+        path_last = path.split()[-1]
         if not os.path.exists(target_path):  # 判断目录是否存在
             os.makedirs(target_path)
         for f in sub_files:
             print(f'start reset sub: {f}')
+            file_path = os.path.join(target_path, f.split(path_last)[-1][1:])
+            path, file = os.path.split(file_path)
+            if not os.path.exists(path):  # 判断目录是否存在
+                os.makedirs(path)
             subtitle = self.reset_sub(f)
-            self.writer(
-                subtitle,
-                os.path.join(target_path, os.path.split(f)[-1])
-            )
+            self.writer(subtitle, file_path)
 
     def convert_path(self, path, target_path):
         file_list = []
