@@ -37,5 +37,6 @@ def translate_file(file: str):
     translator.translate_sub(file_name=file, target_name=file, service='google', from_lang="en", to_lang="zh")
 
 
+
 if __name__ == "__main__":
     app()

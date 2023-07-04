@@ -1,6 +1,5 @@
 from pysubparser import parser, writer
 from pysubparser.classes.subtitle import Subtitle
-from google.cloud import translate_v2 as gtranslate
 from deep_translator import GoogleTranslator
 import os
 from time import sleep
@@ -11,14 +10,10 @@ class Translator:
     def __init__(self):
         self.parser = parser.parse
         self.writer = writer.write
-        # self.translator = gtranslate.Client()
         self.translator = GoogleTranslator(source='en', target='zh-CN')
 
     def translate(self, text, from_lang="en", to_lang="zh"):
-        # _ = ts.preaccelerate_and_speedtest()
         try:
-            # result = self.translator.translate(text, target_language=to_lang)
-            # return result["translatedText"]
             result = self.translator.translate(text)
             return result
         except:
